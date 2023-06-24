@@ -3,10 +3,9 @@ package database
 import (
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"strconv"
 	"strings"
-
-	"github.com/golang-migrate/migrate/v4/database/postgres"
 
 	// source/file import is required for migration files to read
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -55,7 +54,7 @@ func migrateUp(db *sqlx.DB) error {
 		return err
 	}
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://database/migrations",
+		"file://./database/migration",
 		"postgres", driver)
 
 	if err != nil {
@@ -67,14 +66,14 @@ func migrateUp(db *sqlx.DB) error {
 	return nil
 }
 
-// SetupBindVars prepares the SQL statement for batch insert
+//SetupBindVars prepares the SQL statement for batch insert
 func SetupBindVars(stmt, bindVars string, length int) string {
 	bindVars += ","
 	stmt = fmt.Sprintf(stmt, strings.Repeat(bindVars, length))
 	return replaceSQL(strings.TrimSuffix(stmt, ","), "?")
 }
 
-// replaceSQL replaces the instance occurrence of any string pattern with an increasing $n based sequence
+//replaceSQL replaces the instance occurrence of any string pattern with an increasing $n based sequence
 func replaceSQL(old, searchPattern string) string {
 	tmpCount := strings.Count(old, searchPattern)
 	for m := 1; m <= tmpCount; m++ {

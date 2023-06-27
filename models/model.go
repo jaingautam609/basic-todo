@@ -10,3 +10,9 @@ type Task struct {
 	CreatedAt   time.Time `json:"created_at"`
 	DueDate     time.Time `json:"due_date"`
 }
+type User struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	UID      int    `json:"uid"`
+	//Email    string `json:"email"`
+}

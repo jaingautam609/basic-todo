@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -23,6 +24,27 @@ func AllTasks() http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(taskall)
 	}
+}
+func GetTaskById(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	token := r.Header.Get("Auth_id")
+	urlParts := strings.Split(r.URL.Path, "/")
+	var id = urlParts[len(urlParts)-1]
+	Num, err := strconv.Atoi(id)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	mytask, err := dbHelper.GetTaskById(database.Todo, Num, token)
+	if err != nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(mytask)
 }
 func AddTask(w http.ResponseWriter, r *http.Request) {
 
@@ -50,22 +72,7 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "successfull")
 }
-func GetTaskById(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	token := r.Header.Get("Auth_id")
-	urlParts := strings.Split(r.URL.Path, "/")
-	var id = urlParts[len(urlParts)-1]
-	mytask, err := dbHelper.GetTaskById(database.Todo, id, token)
-	if err != nil {
-		http.Error(w, "Not found", http.StatusNotFound)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(mytask)
-}
+
 func OrderedTasks(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -102,10 +109,15 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Auth_id")
 	urlParts := strings.Split(r.URL.Path, "/")
 	id := urlParts[len(urlParts)-1]
-	dbHelper.DeleteTask(database.Todo, id, token)      // dbHelper package function is called here to delete any task by query.
+	Num, err := strconv.Atoi(id)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	dbHelper.DeleteTask(database.Todo, Num, token)     // dbHelper package function is called here to delete any task by query.
 	taskall := dbHelper.AllTasks(database.Todo, token) // after delete , we are show all the remaining tasks from here
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(taskall)
+	err = json.NewEncoder(w).Encode(taskall)
 	if err != nil {
 		return
 	}

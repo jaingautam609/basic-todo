@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"basic-todo/authen"
 	"basic-todo/database"
+	"basic-todo/database/authentication"
 	"basic-todo/models"
 	"encoding/json"
 	"fmt"
@@ -21,14 +21,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	UID, err := authen.Login(database.Todo, User.Username, User.Password)
+	UID, err := authentication.Login(database.Todo, User.Username, User.Password)
 	if err != nil && UID <= 0 {
 		log.Println(w, http.StatusUnauthorized)
 		return
 	}
 	token := uuid.New().String()
 	w.Header().Set("Auth_id", token)
-	authen.CreateSession(database.Todo, token, UID)
+	authentication.CreateSession(database.Todo, token, UID)
 	fmt.Fprintf(w, "successfull")
 }
 func Logout(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +37,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	token := r.Header.Get("Auth_id")
-	authen.Logout(database.Todo, token)
+	authentication.Logout(database.Todo, token)
 	fmt.Fprintf(w, "successfull")
 }
 func NewUser(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +50,7 @@ func NewUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	err = authen.Create(database.Todo, User.Username, User.Password)
+	err = authentication.Create(database.Todo, User.Username, User.Password)
 	if err != nil {
 		return
 	}

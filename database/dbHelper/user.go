@@ -8,13 +8,13 @@ import (
 	"time"
 )
 
-func CreateTask(db sqlx.Ext, title, description string, due_date time.Time, completed bool, token string) error {
-	user_id, err := GetsessionId(database.Todo, token)
+func CreateTask(db sqlx.Ext, title, description string, dueDate time.Time, completed bool, token string) error {
+	userId, err := GetsessionId(database.Todo, token)
 	if err != nil {
 		return err
 	}
-	SQL := `INSERT INTO tasks(title, description, due_date,completed,userid) VALUES ($1,$2,$3,$4,$5)`
-	_, err = db.Query(SQL, title, description, due_date, completed, user_id)
+	SQL := `INSERT INTO tasks(title, description, dueDate,completed,userid) VALUES ($1,$2,$3,$4,$5)`
+	_, err = db.Query(SQL, title, description, dueDate, completed, userId)
 	log.Println("Added task.")
 	if err != nil {
 		return err
@@ -27,29 +27,31 @@ func GetsessionId(db sqlx.Ext, token string) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	var user_id int
+	var userId int
 	for rows.Next() {
 
-		err = rows.Scan(&user_id)
+		err = rows.Scan(&userId)
 		if err != nil {
 			return -2, err
 		}
 
 	}
 
-	return user_id, nil
+	return userId, nil
 }
 func AllTasks(db sqlx.Ext, token string) []models.Task {
-	user_id, err := GetsessionId(database.Todo, token)
-	SQL := `SELECT id, title, description, completed, due_date,created_at from todo where userid=$1`
+	userId, err := GetsessionId(database.Todo, token)
+	SQL := `SELECT id, title, description, completed, dueDate,createdAt from tasks where userid=$1`
 	var tasks []models.Task
-	rows, err := db.Query(SQL, user_id)
+	rows, err := db.Query(SQL, userId)
 	if err != nil {
+		//fmt.Fprintf("hello")
+		log.Println("here")
 		return tasks
 	}
 	for rows.Next() {
 		var task models.Task
-		err = rows.Scan(&task.ID, &task.Title, &task.Description, &task.Completed)
+		err = rows.Scan(&task.ID, &task.Title, &task.Description, &task.Completed, &task.DueDate, &task.CreatedAt)
 		if err != nil {
 			return nil
 		}
@@ -61,7 +63,7 @@ func AllTasks(db sqlx.Ext, token string) []models.Task {
 ///*********************
 
 func OrderedTasks(db sqlx.Ext) ([]models.Task, error) {
-	SQL := `SELECT id, title, description, completed, due_date,created_at  FROM todo ORDER BY created_at ASC;`
+	SQL := `SELECT id, title, description, completed, dueDate,createdAt  FROM todo ORDER BY created_at ASC;`
 	var tasks []models.Task
 	rows, err := db.Query(SQL)
 	if err != nil {
@@ -80,7 +82,7 @@ func OrderedTasks(db sqlx.Ext) ([]models.Task, error) {
 }
 
 func OrderedTasksDue(db sqlx.Ext) ([]models.Task, error) {
-	SQL := `SELECT id, title, description, completed, due_date,created_at from todo order by due_date desc`
+	SQL := `SELECT id, title, description, completed, dueDate,createdAt from todo order by due_date desc`
 	var tasks []models.Task
 	rows, err := db.Query(SQL)
 	if err != nil {
@@ -99,7 +101,7 @@ func OrderedTasksDue(db sqlx.Ext) ([]models.Task, error) {
 }
 
 func OrderedTasksCompleted(db sqlx.Ext) ([]models.Task, error) {
-	SQL := `SELECT id, title, description, completed, due_date,created_at from todo where completed = true`
+	SQL := `SELECT id, title, description, completed, dueDate,createdAt from todo where completed = true`
 	var tasks []models.Task
 	rows, err := db.Query(SQL)
 	if err != nil {
@@ -118,29 +120,36 @@ func OrderedTasksCompleted(db sqlx.Ext) ([]models.Task, error) {
 }
 
 /////////*************************
-func GetTaskById(db sqlx.Ext, id string, token string) (models.Task, error) {
-	user_id, err := GetsessionId(database.Todo, token)
-	SQL := `SELECT id, title, description, completed, due_date,created_at from todo WHERE ID = $1 and userid=$2 `
-	rows, err := db.Query(SQL, id, user_id)
+func GetTaskById(db sqlx.Ext, id int, token string) (models.Task, error) {
+	userId, err := GetsessionId(database.Todo, token)
+	SQL := `SELECT id, title, description, completed, dueDate,createdAt from tasks WHERE ID = $1 and userid=$2 `
+	rows, err := db.Query(SQL, id, userId)
 	if err != nil {
 		return models.Task{}, err
 	}
 	var task models.Task
-	rows.Scan(&task.ID, &task.Title, &task.Description, &task.Completed)
+	//var tasks []models.Task
+	for rows.Next() {
+
+		err = rows.Scan(&task.ID, &task.Title, &task.Description, &task.Completed, &task.DueDate, &task.CreatedAt)
+		if err != nil {
+		}
+	}
 	return task, nil
 }
-func DeleteTask(db sqlx.Ext, id string, token string) {
-	user_id, err := GetsessionId(database.Todo, token)
+
+func DeleteTask(db sqlx.Ext, id int, token string) {
+	userId, err := GetsessionId(database.Todo, token)
 	SQL := `DELETE FROM Tasks WHERE id = $1 and userid=$2`
-	_, err = db.Query(SQL, id, user_id)
+	_, err = db.Query(SQL, id, userId)
 	if err != nil {
 		return
 	}
 }
 func UpdateTask(db sqlx.Ext, id string, token string) {
-	user_id, err := GetsessionId(database.Todo, token)
+	userId, err := GetsessionId(database.Todo, token)
 	SQL := `UPDATE todo SET Completed = true WHERE id = $1 and userid=$2`
-	_, err = db.Query(SQL, id, user_id)
+	_, err = db.Query(SQL, id, userId)
 	if err != nil {
 		return
 	}

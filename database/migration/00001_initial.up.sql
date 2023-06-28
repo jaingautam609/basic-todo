@@ -1,16 +1,16 @@
-create TABLE if not exists users(
+create table if not exists users(
                                     id serial primary key not null,
                                     username text not null unique,
                                     password text not null
 );
 
-create TABLE if not exists tasks(
+create table if not exists tasks(
                                     id serial primary key not null,
                                     title text not null,
                                     description text not null,
                                     completed bool not null,
-                                    due_date timestamp not null,
-                                    created_at timestamp default current_timestamp,
+                                    dueDate timestamp not null,
+                                    createdAt timestamp default current_timestamp,
                                     userid int REFERENCES users(id)
     );
 

@@ -9,13 +9,13 @@ create table if not exists tasks(
                                     title text not null,
                                     description text not null,
                                     completed bool not null,
-                                    dueDate timestamp not null,
-                                    createdAt timestamp default current_timestamp,
-                                    userid int REFERENCES users(id)
+                                    due_date timestamp not null,
+                                    created_at timestamp default current_timestamp,
+                                    user_id int REFERENCES users(id)
     );
 
 create table if not exists sessions(
-                                       logedInAt timestamp default current_timestamp,
+                                       loged_In_At timestamp default current_timestamp,
                                        token text primary key not null,
                                        user_id int REFERENCES users(id) not null
     );

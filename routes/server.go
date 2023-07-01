@@ -14,10 +14,4 @@ func ServerRoutes() {
 	http.HandleFunc("/task/add", handler.AddTask)
 	http.HandleFunc("/task/update/", handler.UpdateTask)
 	http.HandleFunc("/task/delete/", handler.DeleteTask)
-	http.HandleFunc("/tasks/ordered", handler.OrderedTasks)
-	http.HandleFunc("/tasks/ordered/due", handler.OrderedTasksDue)
-	http.HandleFunc("/tasks/ordered/completed", handler.OrderedTasksCompleted)
-
 }
-
-//supplymerge

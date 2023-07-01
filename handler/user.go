@@ -5,73 +5,71 @@ import (
 	"basic-todo/database/authentication"
 	"basic-todo/models"
 	"encoding/json"
-	"fmt"
 	"github.com/google/uuid"
-	"log"
 	"net/http"
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		//http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	var User models.User
-	err := json.NewDecoder(r.Body).Decode(&User)
+	var user models.User
+	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		//http.Error(w, "Error to create account", http.StatusBadRequest)
-		//return
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	uId, err := authentication.Login(database.Todo, User.Username, User.Password)
+	uId, err := authentication.Login(database.Todo, user.Username, user.Password)
 	if err != nil {
-		//w.WriteHeader(http.StatusUnauthorizedd)
-		http.Error(w, "Unauthorized person", http.StatusUnauthorized)
-		log.Println(w, http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 	token := uuid.New().String()
 	err = authentication.CreateSession(database.Todo, token, uId)
 	if err != nil {
-		log.Println("sessions not created")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Auth_id", token)
-	fmt.Fprintf(w, "successfull")
+
+	err = json.NewEncoder(w).Encode(map[string]interface{}{
+		"Authentication": token,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		//http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	token := r.Header.Get("Auth_id")
+	token := r.Header.Get("Authentication")
 	err := authentication.Logout(database.Todo, token)
 	if err != nil {
-		//http.Error(w, "Error decoding JSON", http.StatusBadRequest)
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	fmt.Fprintf(w, "successfull")
+	w.WriteHeader(http.StatusOK)
+
 }
 func NewUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		//w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	var User models.User
 	err := json.NewDecoder(r.Body).Decode(&User)
 	if err != nil {
-		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	err = authentication.Create(database.Todo, User.Username, User.Password)
 	if err != nil {
-		http.Error(w, "Error to create account", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	fmt.Fprintf(w, "successfull")
+	w.WriteHeader(http.StatusCreated)
 }

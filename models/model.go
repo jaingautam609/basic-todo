@@ -13,5 +13,5 @@ type Task struct {
 type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	UID      int    `json:"uid"`
+	uId      int
 }
